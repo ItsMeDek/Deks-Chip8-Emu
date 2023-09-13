@@ -9,5 +9,9 @@ fn main() {
 
     let rom = std::fs::read(Path::new::<String>(&args[0])).expect("Invalid rom path!");
 
-    let emulator = Emulator::new(rom);
+    let mut emulator = Emulator::new(rom);
+    // TODO: Replace
+    loop {
+        emulator.next_cycle();
+    }
 }

@@ -10,7 +10,7 @@ pub struct Emulator {
     video_memory: [[u8; 32]; 64],
     // Pseudo-Registers
     sp: u8,
-    pc: u16,
+    pc: usize,
     // Normal registers
     vx: [u8; 16],
     i: u16,
@@ -37,6 +37,37 @@ impl Emulator {
         }
 
         emulator
+    }
+
+    pub fn next_cycle(&mut self) {
+        // Decrement the timers
+        for mut timer in self.timers {
+            if timer > 0 {
+                timer -= 1;
+            }
+        }
+
+        let opcode = self.fetch_opcode();
+        match opcode {
+            _ => {
+                panic!("Unknown opcode 0x{:x}!", opcode);
+            }
+        }
+
+        self.pc += 1;
+    }
+
+    fn fetch_opcode(&self) -> u16 {
+        let nibble1 = self.memory[self.pc];
+        let nibble2 = self.memory[self.pc + 1];
+        let opcode: u16 = ((nibble1 as u16) << 8) | (nibble2 as u16);
+
+        opcode
+    }
+
+    #[doc = "Jump to a specific place in memory"]
+    fn jump(&mut self, location: u16) {
+        self.pc = location as usize;
     }
 }
 
