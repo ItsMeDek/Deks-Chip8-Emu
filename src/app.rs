@@ -65,6 +65,33 @@ impl Emulator {
 
                 self.set_register(register_index, value);
             },
+            0xA000 => {
+                let value = opcode & 0x0FFF;
+
+                self.set_i(value);
+            },
+            // TODO: Test it and clean it up
+            0xD000 => {
+                let sprite_size = (opcode & 0x000F) as u16;
+                let y_register_index = ((opcode & 0x00F0) >> 4) as u8;
+                let x_register_index = ((opcode & 0x0F00) >> 8) as u8;
+                
+                let sprite_x = self.vx[x_register_index as usize];
+                let sprite_y = self.vx[y_register_index as usize];
+
+                let sprite = self.read_ram(self.i, sprite_size);
+
+                for iteration in 0..sprite_size {
+                    if self.video_memory[(sprite_x + iteration as u8) as usize][sprite_y as usize] != 0 {
+                        self.vx[15] = 1;
+                    }
+                    self.video_memory[(sprite_x + iteration as u8) as usize][sprite_y as usize] = self.video_memory[(sprite_x + iteration as u8) as usize][sprite_y as usize] ^ sprite[iteration as usize];
+                }
+
+                if self.vx[15] != 1 {
+                    self.vx[15] = 0;
+                }
+            },
             _ => {
                 panic!("Unknown opcode 0x{:x}!", opcode);
             }
@@ -98,6 +125,22 @@ impl Emulator {
                 column = 0;
             }
         }
+    }
+
+    #[doc = "Set the I register to the specified value"]
+    fn set_i(&mut self, value: u16) {
+        self.i = value;
+    }
+
+    #[doc = "Read `bytes` bytes from memory at the offset of `offset`"]
+    fn read_ram(&self, offset: u16, bytes: u16) -> Vec<u8> {
+        let mut read_bytes: Vec<u8> = Vec::new();
+
+        for iteration in 0..bytes {
+            read_bytes.push(self.memory[(offset + iteration) as usize]);
+        }
+
+        read_bytes
     }
 }
 
