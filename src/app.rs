@@ -3,7 +3,7 @@ pub trait App {
     fn render(&mut self);
 }
 
-struct Emulator {
+pub struct Emulator {
     // Stack, ram, etc...
     stack: [u16; 16],
     memory: [u8; 4096],
@@ -18,8 +18,8 @@ struct Emulator {
 }
 
 impl Emulator {
-    pub fn new() -> Self {
-        Self {
+    pub fn new(rom: Vec<u8>) -> Self {
+        let mut emulator = Self {
             stack: [0; 16],
             memory: [0; 4096],
             video_memory: [[0; 32]; 64],
@@ -30,7 +30,13 @@ impl Emulator {
             vx: [0; 16],
             i: 0,
             timers: [0; 2],
+        };
+
+        for (iteration, byte) in rom.iter().enumerate() {
+            emulator.memory[0x200 + iteration] = *byte;
         }
+
+        emulator
     }
 }
 
