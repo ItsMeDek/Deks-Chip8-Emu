@@ -3,6 +3,9 @@ use crate::emulator::Emulator;
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;
 
+// TODO: Replace with a better solution
+const HARDWARE_CANVAS: bool = true;
+
 #[derive(Debug, PartialEq)]
 pub enum AppStatus {
     Continue,
@@ -40,16 +43,30 @@ impl NaukaApp {
         .build()
         .expect("Failed to init SDL Window!");
         
-        let window_canvas = window.into_canvas()
-        .software()
-        .present_vsync()
-        .build()
-        .expect("Failed to init SDL Window Canvas!");
+        if HARDWARE_CANVAS {
+            let window_canvas = window.into_canvas()
+            .accelerated()
+            .present_vsync()
+            .build()
+            .expect("Failed to init SDL Window Canvas!");
 
-        Self {
-            event_pump,
-            window_canvas,
-            emulator: Emulator::new(rom)
+            Self {
+                event_pump,
+                window_canvas,
+                emulator: Emulator::new(rom)
+            }
+        } else {
+            let window_canvas = window.into_canvas()
+            .software()
+            .present_vsync()
+            .build()
+            .expect("Failed to init SDL Window Canvas!");
+
+            Self {
+                event_pump,
+                window_canvas,
+                emulator: Emulator::new(rom)
+            }
         }
     }
 }
