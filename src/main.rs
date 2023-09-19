@@ -1,7 +1,8 @@
 use std::path::Path;
 
-use app::Emulator;
+use emulator::Emulator;
 
+mod emulator;
 mod app;
 
 fn main() {
