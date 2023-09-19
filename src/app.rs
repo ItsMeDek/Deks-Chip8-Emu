@@ -3,9 +3,23 @@ use crate::emulator::Emulator;
 const WINDOW_WIDTH: u32 = 800;
 const WINDOW_HEIGHT: u32 = 600;
 
+#[derive(Debug, PartialEq)]
+pub enum AppStatus {
+    Continue,
+    Exit
+}
+
 pub trait App {
-    fn update(&mut self);
+    fn update(&mut self) -> AppStatus;
     fn render(&mut self);
+    fn run(&mut self) {
+        'run_loop: loop {
+            if self.update() == AppStatus::Exit {
+                break 'run_loop;
+            }
+            self.render();
+        }
+    }
 }
 
 pub struct NaukaApp {
@@ -31,5 +45,26 @@ impl NaukaApp {
             window,
             emulator: Emulator::new(rom)
         }
+    }
+}
+
+impl App for NaukaApp {
+    fn update(&mut self) -> AppStatus {
+        for event in self.event_pump.poll_iter() {
+            match event {
+                sdl2::event::Event::Quit { timestamp: _ } => {
+                    return AppStatus::Exit;
+                },
+                _ => {}
+            }
+        }
+
+        self.emulator.next_cycle();
+
+        AppStatus::Continue
+    }
+
+    fn render(&mut self) {
+        
     }
 }
