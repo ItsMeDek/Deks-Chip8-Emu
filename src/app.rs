@@ -24,12 +24,12 @@ pub trait App {
 
 pub struct NaukaApp {
     event_pump: sdl2::EventPump,
-    window: sdl2::video::Window,
+    window_canvas: sdl2::render::Canvas<sdl2::video::Window>,
     emulator: Emulator
 }
 
 impl NaukaApp {
-    fn new(rom: Vec<u8>) -> Self {
+    pub fn new(rom: Vec<u8>) -> Self {
         let sdl = sdl2::init().expect("Failed to init SDL!");
         let sdl_video = sdl.video().expect("Failed to init SDL Video!");
 
@@ -39,10 +39,16 @@ impl NaukaApp {
         .allow_highdpi()
         .build()
         .expect("Failed to init SDL Window!");
+        
+        let window_canvas = window.into_canvas()
+        .software()
+        .present_vsync()
+        .build()
+        .expect("Failed to init SDL Window Canvas!");
 
         Self {
             event_pump,
-            window,
+            window_canvas,
             emulator: Emulator::new(rom)
         }
     }
@@ -65,6 +71,11 @@ impl App for NaukaApp {
     }
 
     fn render(&mut self) {
-        
+        self.window_canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
+        self.window_canvas.clear();
+
+        //self.window_canvas.set_scale(WINDOW_WIDTH as f32 / 64.0, WINDOW_HEIGHT as f32 / 32.0).expect("Failed to set SDL Window Canvas Scale!");
+
+        self.window_canvas.present();
     }
 }

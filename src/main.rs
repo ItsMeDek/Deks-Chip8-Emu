@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use emulator::Emulator;
+use app::{NaukaApp, App};
 
 mod emulator;
 mod app;
@@ -10,9 +10,7 @@ fn main() {
 
     let rom = std::fs::read(Path::new::<String>(&args[0])).expect("Invalid rom path!");
 
-    let mut emulator = Emulator::new(rom);
-    // TODO: Replace
-    loop {
-        emulator.next_cycle();
-    }
+    let mut app = NaukaApp::new(rom);
+
+    app.run();
 }
