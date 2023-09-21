@@ -1,10 +1,25 @@
+use std::path::Path;
+
 use crate::emulator::Emulator;
 
-const WINDOW_WIDTH: u32 = 800;
-const WINDOW_HEIGHT: u32 = 600;
+#[derive(Debug, clap::Parser)]
+pub struct AppConfiguration {
+    #[doc = "Specify the Chip8 rom path"]
+    #[arg(long)]
+    rom: String,
 
-// TODO: Replace with a better solution
-const HARDWARE_CANVAS: bool = true;
+    #[doc = "Enables the hardware renderer"]
+    #[arg(long, default_value_t = false)]
+    hardware_canvas: bool,
+
+    #[doc = "Specify the width of the window"]
+    #[arg(long, default_value_t = 800)]
+    width: u32,
+
+    #[doc = "Specify the height of the window"]
+    #[arg(long, default_value_t = 600)]
+    height: u32
+}
 
 #[derive(Debug, PartialEq)]
 pub enum AppStatus {
@@ -32,18 +47,21 @@ pub struct NaukaApp {
 }
 
 impl NaukaApp {
-    pub fn new(rom: Vec<u8>) -> Self {
+    pub fn new(configuration: AppConfiguration) -> Self {
         let sdl = sdl2::init().expect("Failed to init SDL!");
         let sdl_video = sdl.video().expect("Failed to init SDL Video!");
 
         let event_pump = sdl.event_pump().expect("Failed to init SDL Event Pump!");
 
-        let window = sdl_video.window("CHIP8 Emulator", WINDOW_WIDTH, WINDOW_HEIGHT)
+        let window = sdl_video.window("CHIP8 Emulator", configuration.width, configuration.height)
         .allow_highdpi()
+        .resizable()
         .build()
         .expect("Failed to init SDL Window!");
+
+        let rom = std::fs::read(Path::new::<String>(&configuration.rom)).expect("Invalid rom path!");
         
-        if HARDWARE_CANVAS {
+        if configuration.hardware_canvas {
             let window_canvas = window.into_canvas()
             .accelerated()
             .present_vsync()
@@ -91,7 +109,7 @@ impl App for NaukaApp {
         self.window_canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
         self.window_canvas.clear();
 
-        self.window_canvas.set_scale(WINDOW_WIDTH as f32 / 64.0, WINDOW_HEIGHT as f32 / 32.0).expect("Failed to set SDL Window Canvas Scale!");
+        self.window_canvas.set_scale(self.window_canvas.window().size().0 as f32 / 64.0, self.window_canvas.window().size().1 as f32 / 32.0).expect("Failed to set SDL Window Canvas Scale!");
 
         self.window_canvas.set_draw_color(sdl2::pixels::Color::RGB(255, 255, 255));
         for (row_iteration, row) in self.emulator.video_memory().iter().enumerate() {

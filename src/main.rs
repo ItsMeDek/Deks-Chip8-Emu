@@ -1,17 +1,13 @@
-use std::path::Path;
-
-use app::{NaukaApp, App};
+use app::{NaukaApp, App, AppConfiguration};
+use clap::Parser;
 
 mod opcode;
 mod emulator;
 mod app;
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let args = AppConfiguration::parse();
 
-    let rom = std::fs::read(Path::new::<String>(&args[0])).expect("Invalid rom path!");
-
-    let mut app = NaukaApp::new(rom);
-
+    let mut app = NaukaApp::new(args);
     app.run();
 }
