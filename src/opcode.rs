@@ -41,3 +41,24 @@ pub enum EightOpcode {
     SubnVxVy = 0x7,
     ShlVx = 0xE,
 }
+
+#[repr(u16)]
+#[derive(Debug, FromPrimitive)]
+pub enum FourteenOpcode {
+    SkpVx = 0x9E,
+    SkpnVx = 0xA1
+}
+
+#[repr(u16)]
+#[derive(Debug, FromPrimitive)]
+pub enum FifteenOpcode {
+    LdVxDt = 0x07,
+    LdVxK = 0x0A,
+    LdDtVx = 0x15,
+    LdStVx = 0x18,
+    AddIVx = 0x1E,
+    LdFVx = 0x29,
+    LdBVx = 0x33,
+    LdIVx = 0x55,
+    LdVxI = 0x65,
+}
