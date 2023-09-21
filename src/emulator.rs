@@ -102,7 +102,7 @@ impl Emulator {
                 let register_index = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
 
-                if self.vx[register_index as usize] == value {
+                if self.fetch_register(register_index) == value {
                     self.pc += 4;
                 } else {
                     self.pc += 2;
@@ -112,7 +112,7 @@ impl Emulator {
                 let register_index = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
 
-                if self.vx[register_index as usize] != value {
+                if self.fetch_register(register_index) != value {
                     self.pc += 4;
                 } else {
                     self.pc += 2;
@@ -122,7 +122,7 @@ impl Emulator {
                 let first_register_index = ((opcode & 0x00F0) >> 4) as u8;
                 let second_register_index = ((opcode & 0x0F00) >> 8) as u8;
 
-                if self.vx[first_register_index as usize] == self.vx[second_register_index as usize] {
+                if self.vx[first_register_index as usize] == self.fetch_register(second_register_index) {
                     self.pc += 4;
                 } else {
                     self.pc += 2;
@@ -148,14 +148,14 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.vx[first_register_index as usize] = self.vx[second_register_index as usize];
+                        self.vx[first_register_index as usize] = self.fetch_register(second_register_index);
                         self.pc += 2;
                     },
                     Some(EightOpcode::OrVxVy) => {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.vx[first_register_index as usize] |= self.vx[second_register_index as usize];
+                        self.vx[first_register_index as usize] |= self.fetch_register(second_register_index);
                         self.pc += 2;
                     },
                     Some(EightOpcode::AndVxVy) => {
@@ -169,18 +169,18 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.vx[first_register_index as usize] ^= self.vx[second_register_index as usize];
+                        self.vx[first_register_index as usize] ^= self.fetch_register(second_register_index);
                         self.pc += 2;
                     },
                     Some(EightOpcode::AddVxVy) => {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        let vx_value_before = self.vx[first_register_index as usize];
+                        let vx_value_before = self.fetch_register(first_register_index);
 
-                        self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_add(self.vx[second_register_index as usize]);
+                        self.vx[first_register_index as usize] = self.fetch_register(first_register_index).wrapping_add(self.fetch_register(second_register_index));
 
-                        if self.vx[first_register_index as usize] < vx_value_before {
+                        if self.fetch_register(first_register_index) < vx_value_before {
                             self.vx[15] = 1;
                         } else {
                             self.vx[15] = 0;
@@ -191,9 +191,9 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_sub(self.vx[second_register_index as usize]);
+                        self.vx[first_register_index as usize] = self.fetch_register(first_register_index).wrapping_sub(self.fetch_register(second_register_index));
 
-                        if self.vx[first_register_index as usize] > self.vx[second_register_index as usize] {
+                        if self.fetch_register(first_register_index) > self.fetch_register(second_register_index) {
                             self.vx[15] = 1;
                         } else {
                             self.vx[15] = 0;
@@ -204,7 +204,7 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         //let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_shr(1);
+                        self.vx[first_register_index as usize] = self.fetch_register(first_register_index).wrapping_shr(1);
 
                         if (self.vx[first_register_index as usize] & 0b00000001) == 1 {
                             self.vx[15] = 1;
@@ -217,9 +217,9 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.vx[first_register_index as usize] = self.vx[second_register_index as usize].wrapping_sub(self.vx[first_register_index as usize]);
+                        self.vx[first_register_index as usize] = self.fetch_register(second_register_index).wrapping_sub(self.fetch_register(first_register_index));
 
-                        if self.vx[second_register_index as usize] > self.vx[first_register_index as usize] {
+                        if self.fetch_register(second_register_index) > self.fetch_register(first_register_index) {
                             self.vx[15] = 1;
                         } else {
                             self.vx[15] = 0;
@@ -230,9 +230,9 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         //let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_shl(1);
+                        self.vx[first_register_index as usize] = self.fetch_register(first_register_index).wrapping_shl(1);
 
-                        if (self.vx[first_register_index as usize] & 0b10000000) == 1 {
+                        if (self.fetch_register(first_register_index) & 0b10000000) == 1 {
                             self.vx[15] = 1;
                         } else {
                             self.vx[15] = 0;
@@ -248,7 +248,7 @@ impl Emulator {
                 let first_register_index = ((opcode & 0x00F0) >> 4) as u8;
                 let second_register_index = ((opcode & 0x0F00) >> 8) as u8;
 
-                if self.vx[first_register_index as usize] != self.vx[second_register_index as usize] {
+                if self.fetch_register(first_register_index) != self.fetch_register(second_register_index) {
                     self.pc += 4;
                 } else {
                     self.pc += 2;
@@ -262,11 +262,11 @@ impl Emulator {
             },
             Some(Opcode::DrwVxVy) => {
                 let sprite_size = (opcode & 0x000F) as u16;
-                let y_register_index = ((opcode & 0x00F0) >> 4) as u8;
                 let x_register_index = ((opcode & 0x0F00) >> 8) as u8;
+                let y_register_index = ((opcode & 0x00F0) >> 4) as u8;
                 
-                let sprite_x = (self.vx[x_register_index as usize] % 64) as usize;
-                let sprite_y = (self.vx[y_register_index as usize] % 32) as usize;
+                let sprite_x = (self.fetch_register(x_register_index) % 64) as usize;
+                let sprite_y = (self.fetch_register(y_register_index) % 32) as usize;
 
                 let sprite = self.read_ram(self.i, sprite_size);
 
@@ -297,7 +297,7 @@ impl Emulator {
                     },
                     Some(FifteenOpcode::LdDtVx) => {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
-                        let register_value = self.vx[register_index as usize];
+                        let register_value = self.fetch_register(register_index);
 
                         self.timers[0] = register_value;
                         self.pc += 2;
@@ -305,19 +305,19 @@ impl Emulator {
                     Some(FifteenOpcode::AddIVx) => {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
 
-                        self.i = self.i.wrapping_add(self.vx[register_index as usize] as u16);
+                        self.i = self.i.wrapping_add(self.fetch_register(register_index) as u16);
                         self.pc += 2;
                     },
                     Some(FifteenOpcode::LdFVx) => {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
-                        let register_value = self.vx[register_index as usize];
+                        let register_value = self.fetch_register(register_index);
 
                         self.i = 0x50 + (register_value * 5) as u16;
                         self.pc += 2;
                     },
                     Some(FifteenOpcode::LdBVx) => {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
-                        let register_value = self.vx[register_index as usize];
+                        let register_value = self.fetch_register(register_index);
 
                         let bcd_values = vec![register_value / 100, register_value % 100 / 10, register_value % 10];
 
@@ -385,6 +385,11 @@ impl Emulator {
     #[doc = "Set a Vx to the specified value"]
     fn set_register(&mut self, register_index: u8, value: u8) {
         self.vx[register_index as usize] = value;
+    }
+
+    #[doc = "Get the value from Vx"]
+    fn fetch_register(&self, register_index: u8) -> u8 {
+        self.vx[register_index as usize]
     }
 
     #[doc = "Add the specified value to Vx"]
