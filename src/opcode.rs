@@ -27,3 +27,17 @@ pub enum ZeroOpcode {
     CLS = 0xE0,
     RET = 0xEE
 }
+
+#[repr(u16)]
+#[derive(Debug, FromPrimitive)]
+pub enum EightOpcode {
+    LdVxVy = 0x0,
+    OrVxVy = 0x1,
+    AndVxVy = 0x2,
+    XorVxVy = 0x3,
+    AddVxVy = 0x4,
+    SubVxVy = 0x5,
+    ShrVx = 0x6,
+    SubnVxVy = 0x7,
+    ShlVx = 0xE,
+}
