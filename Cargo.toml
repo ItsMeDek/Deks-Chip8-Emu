@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+clap = "4.4.4"
 num = "0.4.1"
 num-derive = "0.4.0"
 num-traits = "0.2.16"
