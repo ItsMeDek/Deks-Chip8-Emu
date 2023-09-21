@@ -2,6 +2,7 @@ use std::path::Path;
 
 use app::{NaukaApp, App};
 
+mod opcode;
 mod emulator;
 mod app;
 

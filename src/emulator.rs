@@ -1,3 +1,5 @@
+use crate::opcode::{Opcode, ZeroOpcode, EightOpcode, FifteenOpcode};
+
 const FONT: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -70,14 +72,14 @@ impl Emulator {
         }
 
         let opcode = self.fetch_opcode();
-        match opcode & 0xF000 {
-            0x0000 => {
-                match opcode & 0x00FF {
-                    0xE0 => {
+        match num::FromPrimitive::from_u16(opcode & 0xF000) {
+            Some(Opcode::ZeroOpcode) => {
+                match num::FromPrimitive::from_u16(opcode & 0x00FF) {
+                    Some(ZeroOpcode::CLS) => {
                         self.clear_screen();
                         self.pc += 2;
                     },
-                    0xEE => {
+                    Some(ZeroOpcode::RET) => {
                         self.pc = self.pop();
                         self.pc += 2;
                     },
@@ -86,17 +88,17 @@ impl Emulator {
                     }
                 }
             },
-            0x1000 => {
+            Some(Opcode::JpAddr) => {
                 let value = opcode & 0x0FFF;
                 self.jump(value);
             },
-            0x2000 => {
+            Some(Opcode::CallAddr) => {
                 let value = opcode & 0x0FFF;
 
                 self.push(self.pc);
                 self.jump(value);
-            },
-            0x3000 => {
+            }, 
+            Some(Opcode::SeVxByte) => {
                 let register_index = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
 
@@ -106,7 +108,7 @@ impl Emulator {
                     self.pc += 2;
                 }
             },
-            0x4000 => {
+            Some(Opcode::SneVxByte) => {
                 let register_index = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
 
@@ -116,7 +118,7 @@ impl Emulator {
                     self.pc += 2;
                 }
             },
-            0x5000 => {
+            Some(Opcode::SeVxVy) => {
                 let first_register_index = ((opcode & 0x00F0) >> 4) as u8;
                 let second_register_index = ((opcode & 0x0F00) >> 8) as u8;
 
@@ -126,51 +128,51 @@ impl Emulator {
                     self.pc += 2;
                 }
             },
-            0x6000 => {
+            Some(Opcode::LdVxByte) => {
                 let register_index = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
 
                 self.set_register(register_index, value);
                 self.pc += 2;
             },
-            0x7000 => {
+            Some(Opcode::AddVxByte) => {
                 let register_index = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
 
                 self.add_register(register_index, value);
                 self.pc += 2;
             },
-            0x8000 => {
-                match opcode & 0x000F {
-                    0x0 => {
+            Some(Opcode::EightOpcode) => {
+                match num::FromPrimitive::from_u16(opcode & 0x000F) {
+                    Some(EightOpcode::LdVxVy) => {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
                         self.vx[first_register_index as usize] = self.vx[second_register_index as usize];
                         self.pc += 2;
                     },
-                    0x1 => {
+                    Some(EightOpcode::OrVxVy) => {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
                         self.vx[first_register_index as usize] |= self.vx[second_register_index as usize];
                         self.pc += 2;
                     },
-                    0x2 => {
+                    Some(EightOpcode::AndVxVy) => {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
                         self.vx[first_register_index as usize] &= self.vx[second_register_index as usize];
                         self.pc += 2;
                     },
-                    0x3 => {
+                    Some(EightOpcode::XorVxVy) => {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
                         self.vx[first_register_index as usize] ^= self.vx[second_register_index as usize];
                         self.pc += 2;
                     },
-                    0x4 => {
+                    Some(EightOpcode::AddVxVy) => {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
@@ -185,7 +187,7 @@ impl Emulator {
                         }
                         self.pc += 2;
                     },
-                    0x5 => {
+                    Some(EightOpcode::SubVxVy) => {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
@@ -198,7 +200,7 @@ impl Emulator {
                         }
                         self.pc += 2;
                     },
-                    0x6 => {
+                    Some(EightOpcode::ShrVx) => {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         //let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
@@ -211,7 +213,7 @@ impl Emulator {
                         }
                         self.pc += 2;
                     },
-                    0x7 => {
+                    Some(EightOpcode::SubnVxVy) => {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
@@ -224,7 +226,7 @@ impl Emulator {
                         }
                         self.pc += 2;
                     },
-                    0xE => {
+                    Some(EightOpcode::ShlVx) => {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         //let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
@@ -238,11 +240,11 @@ impl Emulator {
                         self.pc += 2;
                     },
                     _ => {
-                        panic!("Unknown opcode 0x{:x}!", opcode);
+                        unreachable!()
                     }
                 }
             },
-            0x9000 => {
+            Some(Opcode::SneVxVy) => {
                 let first_register_index = ((opcode & 0x00F0) >> 4) as u8;
                 let second_register_index = ((opcode & 0x0F00) >> 8) as u8;
 
@@ -252,13 +254,13 @@ impl Emulator {
                     self.pc += 2;
                 }
             },
-            0xA000 => {
+            Some(Opcode::LdIAddr) => {
                 let value = opcode & 0x0FFF;
 
                 self.set_i(value);
                 self.pc += 2;
             },
-            0xD000 => {
+            Some(Opcode::DrwVxVy) => {
                 let sprite_size = (opcode & 0x000F) as u16;
                 let y_register_index = ((opcode & 0x00F0) >> 4) as u8;
                 let x_register_index = ((opcode & 0x0F00) >> 8) as u8;
@@ -285,35 +287,35 @@ impl Emulator {
                 }
                 self.pc += 2;
             },
-            0xF000 => {
-                match opcode & 0x00FF {
-                    0x1E => {
-                        let register_index = ((opcode & 0x0F00) >> 8) as u8;
-
-                        self.i = self.i.wrapping_add(self.vx[register_index as usize] as u16);
-                        self.pc += 2;
-                    },
-                    0x07 => {
+            Some(Opcode::FifteenOpcode) => {
+                match num::FromPrimitive::from_u16(opcode & 0x00FF) {
+                    Some(FifteenOpcode::LdVxDt) => {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
 
                         self.vx[register_index as usize] = self.timers[0];
                         self.pc += 2;
                     },
-                    0x15 => {
+                    Some(FifteenOpcode::LdDtVx) => {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let register_value = self.vx[register_index as usize];
 
                         self.timers[0] = register_value;
                         self.pc += 2;
                     },
-                    0x29 => {
+                    Some(FifteenOpcode::AddIVx) => {
+                        let register_index = ((opcode & 0x0F00) >> 8) as u8;
+
+                        self.i = self.i.wrapping_add(self.vx[register_index as usize] as u16);
+                        self.pc += 2;
+                    },
+                    Some(FifteenOpcode::LdFVx) => {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let register_value = self.vx[register_index as usize];
 
                         self.i = 0x50 + (register_value * 5) as u16;
                         self.pc += 2;
                     },
-                    0x33 => {
+                    Some(FifteenOpcode::LdBVx) => {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let register_value = self.vx[register_index as usize];
 
@@ -322,7 +324,7 @@ impl Emulator {
                         self.write_ram(self.i, bcd_values);
                         self.pc += 2;
                     },
-                    0x55 => {
+                    Some(FifteenOpcode::LdIVx) => {
                         let value = ((opcode & 0x0F00) >> 8) as u8;
 
                         for i in 0..=value {
@@ -331,7 +333,7 @@ impl Emulator {
 
                         self.pc += 2;
                     },
-                    0x65 => {
+                    Some(FifteenOpcode::LdVxI) => {
                         let value = ((opcode & 0x0F00) >> 8) as u8;
 
                         let read_memory = self.read_ram(self.i, (value + 1) as u16);
