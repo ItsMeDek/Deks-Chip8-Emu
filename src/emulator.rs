@@ -240,7 +240,7 @@ impl Emulator {
                         self.pc += 2;
                     },
                     _ => {
-                        unreachable!()
+                        unreachable!();
                     }
                 }
             },
