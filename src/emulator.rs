@@ -139,7 +139,7 @@ impl Emulator {
                 let register_index = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
 
-                self.add_register(register_index, value);
+                self.vx[register_index as usize] += value;
                 self.pc += 2;
             },
             Some(Opcode::EightOpcode) => {
@@ -392,16 +392,11 @@ impl Emulator {
         self.vx[register_index as usize]
     }
 
-    #[doc = "Add the specified value to Vx"]
-    fn add_register(&mut self, register_index: u8, value: u8) {
-        self.vx[register_index as usize] = self.vx[register_index as usize].wrapping_add(value);
-    }
-
     #[doc = "Override the entire vram with 0's"]
     fn clear_screen(&mut self) {
         for row in self.video_memory {
-            for mut column in row {
-                column = 0;
+            for mut _column in row {
+                _column = 0;
             }
         }
     }
