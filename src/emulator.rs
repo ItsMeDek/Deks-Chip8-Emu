@@ -206,9 +206,11 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         //let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
+                        let vx_value_before = self.vx[first_register_index as usize];
+
                         self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_shr(1);
 
-                        if (self.vx[first_register_index as usize] & 0b00000001) == 1 {
+                        if ((vx_value_before << 7) >> 7) == 1 {
                             self.vx[15] = 1;
                         } else {
                             self.vx[15] = 0;
@@ -232,9 +234,11 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         //let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
+                        let vx_value_before = self.vx[first_register_index as usize];
+
                         self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_shl(1);
 
-                        if (self.vx[first_register_index as usize] & 0b10000000) == 1 {
+                        if (vx_value_before >> 7) == 1 {
                             self.vx[15] = 1;
                         } else {
                             self.vx[15] = 0;
