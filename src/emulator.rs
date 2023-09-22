@@ -122,7 +122,7 @@ impl Emulator {
                 let first_register_index = ((opcode & 0x00F0) >> 4) as u8;
                 let second_register_index = ((opcode & 0x0F00) >> 8) as u8;
 
-                if self.fetch_register(first_register_index) == self.fetch_register(second_register_index) {
+                if self.vx[first_register_index as usize] == self.fetch_register(second_register_index) {
                     self.pc += 4;
                 } else {
                     self.pc += 2;
@@ -178,12 +178,12 @@ impl Emulator {
 
                         let vx_value_before = self.fetch_register(first_register_index);
 
-                        self.set_register(first_register_index, self.fetch_register(first_register_index).wrapping_add(self.fetch_register(second_register_index)));
+                        self.vx[first_register_index as usize] = self.fetch_register(first_register_index).wrapping_add(self.fetch_register(second_register_index));
 
                         if self.fetch_register(first_register_index) < vx_value_before {
-                            self.set_register(0xF, 1);
+                            self.vx[15] = 1;
                         } else {
-                            self.set_register(0xF, 0);
+                            self.vx[15] = 0;
                         }
                         self.pc += 2;
                     },
@@ -191,12 +191,12 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.set_register(first_register_index, self.fetch_register(first_register_index).wrapping_sub(self.fetch_register(second_register_index)));
+                        self.vx[first_register_index as usize] = self.fetch_register(first_register_index).wrapping_sub(self.fetch_register(second_register_index));
 
                         if self.fetch_register(first_register_index) > self.fetch_register(second_register_index) {
-                            self.set_register(0xF, 1);
+                            self.vx[15] = 1;
                         } else {
-                            self.set_register(0xF, 0);
+                            self.vx[15] = 0;
                         }
                         self.pc += 2;
                     },
@@ -204,12 +204,12 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         //let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.set_register(first_register_index, self.fetch_register(first_register_index).wrapping_shr(1));
+                        self.vx[first_register_index as usize] = self.fetch_register(first_register_index).wrapping_shr(1);
 
-                        if (self.fetch_register(first_register_index) & 0b00000001) == 1 {
-                            self.set_register(0xF, 1);
+                        if (self.vx[first_register_index as usize] & 0b00000001) == 1 {
+                            self.vx[15] = 1;
                         } else {
-                            self.set_register(0xF, 0);
+                            self.vx[15] = 0;
                         }
                         self.pc += 2;
                     },
@@ -217,12 +217,12 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.set_register(first_register_index, self.fetch_register(second_register_index).wrapping_sub(self.fetch_register(first_register_index)));
+                        self.vx[first_register_index as usize] = self.fetch_register(second_register_index).wrapping_sub(self.fetch_register(first_register_index));
 
                         if self.fetch_register(second_register_index) > self.fetch_register(first_register_index) {
-                            self.set_register(0xF, 1);
+                            self.vx[15] = 1;
                         } else {
-                            self.set_register(0xF, 0);
+                            self.vx[15] = 0;
                         }
                         self.pc += 2;
                     },
@@ -230,12 +230,12 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         //let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.set_register(first_register_index, self.fetch_register(first_register_index).wrapping_shl(1));
+                        self.vx[first_register_index as usize] = self.fetch_register(first_register_index).wrapping_shl(1);
 
                         if (self.fetch_register(first_register_index) & 0b10000000) == 1 {
-                            self.set_register(0xF, 1);
+                            self.vx[15] = 1;
                         } else {
-                            self.set_register(0xF, 0);
+                            self.vx[15] = 0;
                         }
                         self.pc += 2;
                     },
@@ -277,9 +277,9 @@ impl Emulator {
                             let sprite_y = sprite_y + column;
 
                             if self.video_memory[sprite_x][sprite_y] ^ sprite[column] as u8 != self.video_memory[sprite_x][sprite_y] {
-                                self.set_register(0xF, 1);
+                                self.vx[15] = 1;
                             } else {
-                                self.set_register(0xF, 0);
+                                self.vx[15] = 0;
                             }
                             self.video_memory[sprite_x][sprite_y] ^= sprite[column] as u8;
                         }
@@ -292,7 +292,7 @@ impl Emulator {
                     Some(FifteenOpcode::LdVxDt) => {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
 
-                        self.set_register(register_index, self.timers[0]);
+                        self.vx[register_index as usize] = self.timers[0];
                         self.pc += 2;
                     },
                     Some(FifteenOpcode::LdDtVx) => {
@@ -305,14 +305,14 @@ impl Emulator {
                     Some(FifteenOpcode::AddIVx) => {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
 
-                        self.set_i(self.i.wrapping_add(self.fetch_register(register_index) as u16));
+                        self.i = self.i.wrapping_add(self.fetch_register(register_index) as u16);
                         self.pc += 2;
                     },
                     Some(FifteenOpcode::LdFVx) => {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let register_value = self.fetch_register(register_index);
 
-                        self.set_i(0x50 + (register_value * 5) as u16);
+                        self.i = 0x50 + (register_value * 5) as u16;
                         self.pc += 2;
                     },
                     Some(FifteenOpcode::LdBVx) => {
@@ -339,7 +339,7 @@ impl Emulator {
                         let read_memory = self.read_ram(self.i, (value + 1) as u16);
 
                         for i in 0..=value {
-                            self.set_register(i, read_memory[i as usize]);
+                            self.vx[i as usize] = read_memory[i as usize];
                         }
 
                         self.pc += 2;
