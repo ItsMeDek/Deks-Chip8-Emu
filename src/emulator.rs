@@ -179,7 +179,7 @@ impl Emulator {
                         let vx_value_before = self.vx[first_register_index as usize];
 
                         self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_add(self.vx[second_register_index as usize]);
-
+                        // Check for VX overflow
                         if self.vx[first_register_index as usize] < vx_value_before {
                             self.vx[15] = 1;
                         } else {
@@ -191,9 +191,11 @@ impl Emulator {
                         let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
 
-                        self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_sub(self.vx[second_register_index as usize]);
+                        let vx_value_before = self.vx[first_register_index as usize];
 
-                        if self.vx[first_register_index as usize] > self.vx[second_register_index as usize] {
+                        self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_sub(self.vx[second_register_index as usize]);
+                        // Check for VX underflow
+                        if self.vx[first_register_index as usize] < vx_value_before {
                             self.vx[15] = 1;
                         } else {
                             self.vx[15] = 0;
