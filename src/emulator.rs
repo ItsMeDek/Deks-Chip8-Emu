@@ -139,7 +139,7 @@ impl Emulator {
                 let register_index = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
 
-                self.vx[register_index as usize] += value;
+                self.vx[register_index as usize] = self.vx[register_index as usize].wrapping_add(value);
                 self.pc += 2;
             },
             Some(Opcode::EightOpcode) => {
