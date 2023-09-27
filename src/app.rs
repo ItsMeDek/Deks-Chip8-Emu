@@ -100,7 +100,14 @@ impl App for NaukaApp {
             }
         }
 
-        self.emulator.next_cycle();
+        let keyboard_state = self.event_pump.keyboard_state();
+        let scancodes: Vec<sdl2::keyboard::Scancode> = keyboard_state.pressed_scancodes().collect();
+
+        if scancodes.is_empty() {
+            self.emulator.next_cycle(None);
+        } else {
+            self.emulator.next_cycle(Some(scancodes[0]));
+        }
 
         AppStatus::Continue
     }

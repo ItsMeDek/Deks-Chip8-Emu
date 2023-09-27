@@ -1,4 +1,4 @@
-use crate::opcode::{Opcode, ZeroOpcode, EightOpcode, FifteenOpcode};
+use crate::opcode::{Opcode, ZeroOpcode, EightOpcode, FifteenOpcode, FourteenOpcode};
 
 const FONT: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -63,7 +63,7 @@ impl Emulator {
         self.video_memory
     }
 
-    pub fn next_cycle(&mut self) {
+    pub fn next_cycle(&mut self, scancode: Option<sdl2::keyboard::Scancode>) {
         // Decrement the timers
         for mut timer in self.timers {
             if timer > 0 {
@@ -292,6 +292,85 @@ impl Emulator {
                     }
                 }
                 self.pc += 2;
+            },
+            Some(Opcode::FourteenOpcode) => {
+                match num::FromPrimitive::from_u16(opcode & 0x00FF) {
+                    Some(FourteenOpcode::SkpVx) => {
+                        let register_index = ((opcode & 0x0F00) >> 8) as u8;
+                        let value = self.vx[register_index as usize];
+
+                        if scancode.is_none() {
+                            self.pc += 2;
+                            return;
+                        }
+
+                        let keycode: Option<u8> = match scancode.unwrap() {
+                            sdl2::keyboard::Scancode::E => {
+                                Some(0xE)
+                            },
+                            sdl2::keyboard::Scancode::F => {
+                                Some(0xF)
+                            },
+                            sdl2::keyboard::Scancode::Num3 => {
+                                Some(0x3)
+                            },
+                            sdl2::keyboard::Scancode::Num2 => {
+                                Some(0x2)
+                            },
+                            _ => { None }
+                        };
+
+                        if keycode.is_none() {
+                            self.pc += 2;
+                            return;
+                        }
+
+                        if value == keycode.unwrap() {
+                            self.pc += 4;
+                        } else {
+                            self.pc += 2;
+                        }
+                    },
+                    Some(FourteenOpcode::SkpnVx) => {
+                        let register_index = ((opcode & 0x0F00) >> 8) as u8;
+                        let value = self.vx[register_index as usize];
+
+                        if scancode.is_none() {
+                            self.pc += 4;
+                            return;
+                        }
+
+                        let keycode: Option<u8> = match scancode.unwrap() {
+                            sdl2::keyboard::Scancode::E => {
+                                Some(0xE)
+                            },
+                            sdl2::keyboard::Scancode::F => {
+                                Some(0xF)
+                            },
+                            sdl2::keyboard::Scancode::Num3 => {
+                                Some(0x3)
+                            },
+                            sdl2::keyboard::Scancode::Num2 => {
+                                Some(0x2)
+                            },
+                            _ => { None }
+                        };
+
+                        if keycode.is_none() {
+                            self.pc += 4;
+                            return;
+                        }
+
+                        if value == keycode.unwrap() {
+                            self.pc += 2;
+                        } else {
+                            self.pc += 4;
+                        }
+                    },
+                    _ => {
+                       panic!("Unknown opcode 0x{:x}!", opcode);
+                    }
+                }
             },
             Some(Opcode::FifteenOpcode) => {
                 match num::FromPrimitive::from_u16(opcode & 0x00FF) {
