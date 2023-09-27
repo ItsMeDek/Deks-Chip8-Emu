@@ -304,23 +304,9 @@ impl Emulator {
                             return;
                         }
 
-                        let keycode: Option<u8> = match scancode.unwrap() {
-                            sdl2::keyboard::Scancode::E => {
-                                Some(0xE)
-                            },
-                            sdl2::keyboard::Scancode::F => {
-                                Some(0xF)
-                            },
-                            sdl2::keyboard::Scancode::Num3 => {
-                                Some(0x3)
-                            },
-                            sdl2::keyboard::Scancode::Num2 => {
-                                Some(0x2)
-                            },
-                            _ => { None }
-                        };
+                        let keycode = self.scancode_to_value(scancode.unwrap());
 
-                        if keycode.is_none() {
+                        if keycode.is_err() {
                             self.pc += 2;
                             return;
                         }
@@ -340,23 +326,9 @@ impl Emulator {
                             return;
                         }
 
-                        let keycode: Option<u8> = match scancode.unwrap() {
-                            sdl2::keyboard::Scancode::E => {
-                                Some(0xE)
-                            },
-                            sdl2::keyboard::Scancode::F => {
-                                Some(0xF)
-                            },
-                            sdl2::keyboard::Scancode::Num3 => {
-                                Some(0x3)
-                            },
-                            sdl2::keyboard::Scancode::Num2 => {
-                                Some(0x2)
-                            },
-                            _ => { None }
-                        };
+                        let keycode = self.scancode_to_value(scancode.unwrap());
 
-                        if keycode.is_none() {
+                        if keycode.is_err() {
                             self.pc += 4;
                             return;
                         }
@@ -440,6 +412,60 @@ impl Emulator {
         }
     }
 
+    fn scancode_to_value(&self, scancode: sdl2::keyboard::Scancode) -> Result<u8, ()> {
+        match scancode {
+            sdl2::keyboard::Scancode::Num0 => {
+                return Ok(0x0);
+            },
+            sdl2::keyboard::Scancode::Num1 => {
+                return Ok(0x1);
+            },
+            sdl2::keyboard::Scancode::Num2 => {
+                return Ok(0x2);
+            },
+            sdl2::keyboard::Scancode::Num3 => {
+                return Ok(0x3);
+            },
+            sdl2::keyboard::Scancode::Num4 => {
+                return Ok(0x4);
+            },
+            sdl2::keyboard::Scancode::Num5 => {
+                return Ok(0x5);
+            },
+            sdl2::keyboard::Scancode::Num6 => {
+                return Ok(0x6);
+            },
+            sdl2::keyboard::Scancode::Num7 => {
+                return Ok(0x7);
+            },
+            sdl2::keyboard::Scancode::Num8 => {
+                return Ok(0x8);
+            },
+            sdl2::keyboard::Scancode::Num9 => {
+                return Ok(0x9);
+            },
+            sdl2::keyboard::Scancode::A => {
+                return Ok(0xA);
+            },
+            sdl2::keyboard::Scancode::B => {
+                return Ok(0xB);
+            },
+            sdl2::keyboard::Scancode::C => {
+                return Ok(0xC);
+            },
+            sdl2::keyboard::Scancode::D => {
+                return Ok(0xD);
+            },
+            sdl2::keyboard::Scancode::E => {
+                return Ok(0xE);
+            },
+            sdl2::keyboard::Scancode::F => {
+                return Ok(0xF);
+            },
+            _ => { return Err(()) }
+        };
+    }
+
     fn fetch_opcode(&self) -> u16 {
         let nibble1 = self.memory[self.pc as usize];
         let nibble2 = self.memory[(self.pc + 1) as usize];
@@ -469,11 +495,7 @@ impl Emulator {
 
     #[doc = "Override the entire vram with 0's"]
     fn clear_screen(&mut self) {
-        for row in self.video_memory {
-            for mut _column in row {
-                _column = 0;
-            }
-        }
+        self.video_memory.fill([0; 32]);
     }
 
     #[doc = "Set the I register to the specified value"]
