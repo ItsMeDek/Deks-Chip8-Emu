@@ -65,11 +65,9 @@ impl Emulator {
 
     pub fn next_cycle(&mut self, scancodes: Vec<sdl2::keyboard::Scancode>) {
         // Decrement the timers
-        for mut timer in self.timers {
-            if timer > 0 {
-                timer -= 1;
-            }
-        }
+        self.timers.iter_mut().for_each(|timer| {
+            *timer -= 1;
+        });
 
         let opcode = self.fetch_opcode();
         match num::FromPrimitive::from_u16(opcode & 0xF000) {
