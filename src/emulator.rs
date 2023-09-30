@@ -63,7 +63,7 @@ impl Emulator {
         self.video_memory
     }
 
-    pub fn next_cycle(&mut self, scancode: Option<sdl2::keyboard::Scancode>) {
+    pub fn next_cycle(&mut self, scancodes: Vec<sdl2::keyboard::Scancode>) {
         // Decrement the timers
         for mut timer in self.timers {
             if timer > 0 {
@@ -299,21 +299,29 @@ impl Emulator {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let value = self.vx[register_index as usize];
 
-                        if scancode.is_none() {
+                        if scancodes.is_empty() {
                             self.pc += 2;
                             return;
                         }
 
-                        let keycode = self.scancode_to_value(scancode.unwrap());
+                        let mut skipped_opcode = false;
 
-                        if keycode.is_err() {
-                            self.pc += 2;
-                            return;
+                        for scancode in scancodes {
+                            let keycode = self.scancode_to_value(scancode);
+
+                            if keycode.is_err() {
+                                self.pc += 2;
+                                break;
+                            }
+
+                            if value == keycode.unwrap() {
+                                self.pc += 4;
+                                skipped_opcode = true;
+                                break;
+                            }
                         }
 
-                        if value == keycode.unwrap() {
-                            self.pc += 4;
-                        } else {
+                        if !skipped_opcode {
                             self.pc += 2;
                         }
                     },
@@ -321,21 +329,29 @@ impl Emulator {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let value = self.vx[register_index as usize];
 
-                        if scancode.is_none() {
+                        if scancodes.is_empty() {
                             self.pc += 4;
                             return;
                         }
 
-                        let keycode = self.scancode_to_value(scancode.unwrap());
+                        let mut skipped_opcode = false;
 
-                        if keycode.is_err() {
-                            self.pc += 4;
-                            return;
+                        for scancode in scancodes {
+                            let keycode = self.scancode_to_value(scancode);
+
+                            if keycode.is_err() {
+                                self.pc += 4;
+                                break;
+                            }
+
+                            if value == keycode.unwrap() {
+                                self.pc += 2;
+                                skipped_opcode = true;
+                                break;
+                            }
                         }
 
-                        if value == keycode.unwrap() {
-                            self.pc += 2;
-                        } else {
+                        if !skipped_opcode {
                             self.pc += 4;
                         }
                     },

@@ -104,9 +104,9 @@ impl App for NaukaApp {
         let scancodes: Vec<sdl2::keyboard::Scancode> = keyboard_state.pressed_scancodes().collect();
 
         if scancodes.is_empty() {
-            self.emulator.next_cycle(None);
+            self.emulator.next_cycle(vec![]);
         } else {
-            self.emulator.next_cycle(Some(scancodes[0]));
+            self.emulator.next_cycle(scancodes);
         }
 
         AppStatus::Continue
