@@ -316,8 +316,7 @@ impl Emulator {
                             let keycode = self.scancode_to_value(*scancode);
 
                             if keycode.is_err() {
-                                self.pc += 2;
-                                break;
+                                continue;
                             }
 
                             if value == keycode.unwrap() {
@@ -346,8 +345,7 @@ impl Emulator {
                             let keycode = self.scancode_to_value(*scancode);
 
                             if keycode.is_err() {
-                                self.pc += 4;
-                                break;
+                                continue;
                             }
 
                             if value == keycode.unwrap() {
