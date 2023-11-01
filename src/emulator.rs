@@ -66,7 +66,9 @@ impl Emulator {
     pub fn next_cycle(&mut self, scancodes: Vec<sdl2::keyboard::Scancode>) {
         // Decrement the timers
         self.timers.iter_mut().for_each(|timer| {
-            *timer -= 1;
+            if *timer > 1 {
+                *timer -= 1;
+            }
         });
 
         let opcode = self.fetch_opcode();
