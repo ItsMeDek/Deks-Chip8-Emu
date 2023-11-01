@@ -61,6 +61,8 @@ fn main() {
     let mut emulator = Emulator::new(std::fs::read(Path::new::<String>(&configuration.rom)).expect("Invalid rom path!"));
 
     'run_loop: loop {
+        handle_input(&event_pump, &mut emulator);
+
         if update(&mut event_pump, &mut emulator) == AppStatus::Exit {
             break 'run_loop;
         }
@@ -96,14 +98,16 @@ fn update(event_pump: &mut EventPump, emulator: &mut Emulator) -> AppStatus {
         }
     }
 
+    emulator.next_cycle();
+
+    AppStatus::Continue
+}
+
+fn handle_input(event_pump: &EventPump, emulator: &mut Emulator) {
     let keyboard_state = event_pump.keyboard_state();
     let scancodes: Vec<sdl2::keyboard::Scancode> = keyboard_state.pressed_scancodes().collect();
 
-    if scancodes.is_empty() {
-        emulator.next_cycle(vec![]);
-    } else {
-        emulator.next_cycle(scancodes);
+    if !scancodes.is_empty() {
+        emulator.set_scancodes(scancodes);
     }
-
-    AppStatus::Continue
 }

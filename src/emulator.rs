@@ -1,3 +1,5 @@
+use sdl2::keyboard::Scancode;
+
 use crate::opcode::{Opcode, ZeroOpcode, EightOpcode, FifteenOpcode, FourteenOpcode};
 
 const FONT: [u8; 80] = [
@@ -30,7 +32,9 @@ pub struct Emulator {
     // Normal registers
     vx: [u8; 16],
     i: u16,
-    timers: [u8; 2]
+    timers: [u8; 2],
+    // Others
+    scancodes: Vec<Scancode>
 }
 
 impl Emulator {
@@ -46,6 +50,8 @@ impl Emulator {
             vx: [0; 16],
             i: 0,
             timers: [0; 2],
+
+            scancodes: vec![]
         };
 
         for (i, byte) in FONT.iter().enumerate() {
@@ -63,7 +69,7 @@ impl Emulator {
         self.video_memory
     }
 
-    pub fn next_cycle(&mut self, scancodes: Vec<sdl2::keyboard::Scancode>) {
+    pub fn next_cycle(&mut self) {
         // Decrement the timers
         self.timers.iter_mut().for_each(|timer| {
             if *timer > 1 {
@@ -299,15 +305,15 @@ impl Emulator {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let value = self.vx[register_index as usize];
 
-                        if scancodes.is_empty() {
+                        if self.scancodes.is_empty() {
                             self.pc += 2;
                             return;
                         }
 
                         let mut skipped_opcode = false;
 
-                        for scancode in scancodes {
-                            let keycode = self.scancode_to_value(scancode);
+                        for scancode in self.scancodes.iter() {
+                            let keycode = self.scancode_to_value(*scancode);
 
                             if keycode.is_err() {
                                 self.pc += 2;
@@ -329,15 +335,15 @@ impl Emulator {
                         let register_index = ((opcode & 0x0F00) >> 8) as u8;
                         let value = self.vx[register_index as usize];
 
-                        if scancodes.is_empty() {
+                        if self.scancodes.is_empty() {
                             self.pc += 4;
                             return;
                         }
 
                         let mut skipped_opcode = false;
 
-                        for scancode in scancodes {
-                            let keycode = self.scancode_to_value(scancode);
+                        for scancode in self.scancodes.iter() {
+                            let keycode = self.scancode_to_value(*scancode);
 
                             if keycode.is_err() {
                                 self.pc += 4;
@@ -426,6 +432,8 @@ impl Emulator {
                 panic!("Unknown opcode 0x{:x}!", opcode);
             }
         }
+
+        self.scancodes.clear();
     }
 
     fn scancode_to_value(&self, scancode: sdl2::keyboard::Scancode) -> Result<u8, ()> {
@@ -480,6 +488,10 @@ impl Emulator {
             },
             _ => { return Err(()) }
         };
+    }
+
+    pub fn set_scancodes(&mut self, scancodes: Vec<Scancode>) {
+        self.scancodes = scancodes;
     }
 
     fn fetch_opcode(&self) -> u16 {
