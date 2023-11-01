@@ -23,7 +23,7 @@ pub struct Emulator {
     // Stack, ram, etc...
     stack: [u16; 16],
     memory: [u8; 4096],
-    video_memory: [[u8; 32]; 64],
+    video_memory: [[bool; 32]; 64],
     // Pseudo-Registers
     sp: u8,
     pc: u16,
@@ -38,7 +38,7 @@ impl Emulator {
         let mut emulator = Self {
             stack: [0; 16],
             memory: [0; 4096],
-            video_memory: [[0; 32]; 64],
+            video_memory: [[false; 32]; 64],
 
             sp: 0,
             pc: 0x200, // 512 in decimal
@@ -59,7 +59,7 @@ impl Emulator {
         emulator
     }
 
-    pub fn video_memory(&self) -> [[u8; 32]; 64] {
+    pub fn video_memory(&self) -> [[bool; 32]; 64] {
         self.video_memory
     }
 
@@ -282,12 +282,12 @@ impl Emulator {
                             let sprite_x = sprite_x + row;
                             let sprite_y = sprite_y + column;
 
-                            if self.video_memory[sprite_x][sprite_y] ^ sprite[column] as u8 != self.video_memory[sprite_x][sprite_y] {
+                            if self.video_memory[sprite_x][sprite_y] ^ (sprite[column] != 0) != self.video_memory[sprite_x][sprite_y] {
                                 self.vx[15] = 1;
                             } else {
                                 self.vx[15] = 0;
                             }
-                            self.video_memory[sprite_x][sprite_y] ^= sprite[column] as u8;
+                            self.video_memory[sprite_x][sprite_y] ^= sprite[column] != 0;
                         }
                     }
                 }
@@ -511,7 +511,7 @@ impl Emulator {
 
     #[doc = "Override the entire vram with 0's"]
     fn clear_screen(&mut self) {
-        self.video_memory.fill([0; 32]);
+        self.video_memory.fill([false; 32]);
     }
 
     #[doc = "Set the I register to the specified value"]

@@ -121,7 +121,7 @@ impl App for NaukaApp {
         self.window_canvas.set_draw_color(sdl2::pixels::Color::RGB(255, 255, 255));
         for (row_iteration, row) in self.emulator.video_memory().iter().enumerate() {
             for (column_iteration, column) in row.iter().enumerate() {
-                if *column != 0 {
+                if *column != false {
                     self.window_canvas.draw_point(sdl2::rect::Point::new(row_iteration as i32, column_iteration as i32)).expect("Failed to draw a Point!");
                 }
             }
