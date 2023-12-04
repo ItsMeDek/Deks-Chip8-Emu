@@ -63,8 +63,57 @@ impl Emulator {
         emulator
     }
 
-    pub fn video_memory(&self) -> [[bool; 32]; 64] {
-        self.video_memory
+    fn handle_cls(&mut self) {
+        self.clear_screen();
+        self.pc += 2;
+    }
+
+    fn handle_ret(&mut self) {
+        self.pc = self.pop();
+        self.pc += 2;
+    }
+
+    fn handle_jmp(&mut self, address: u16) {
+        self.jump(address);
+    }
+
+    fn handle_call(&mut self, address: u16) {
+        self.push(self.pc);
+        self.jump(address);
+    }
+
+    fn handle_se_vx_byte(&mut self, register: u8, value: u8) {
+        if self.vx[register as usize] == value {
+            self.pc += 4;
+        } else {
+            self.pc += 2;
+        }
+    }
+
+    fn handle_sne_vx_byte(&mut self, register: u8, value: u8) {
+        if self.vx[register as usize] != value {
+            self.pc += 4;
+        } else {
+            self.pc += 2;
+        }
+    }
+
+    fn handle_se_vx_vy(&mut self, first_register: u8, second_register: u8) {
+        if self.vx[first_register as usize] == self.vx[second_register as usize] {
+            self.pc += 4;
+        } else {
+            self.pc += 2;
+        }
+    }
+
+    fn handle_ld_vx_byte(&mut self, register: u8, value: u8) {
+        self.vx[register as usize] = value;
+        self.pc += 2;
+    }
+
+    fn handle_add_vx_byte(&mut self, register: u8, value: u8) {
+        self.vx[register as usize] = self.vx[register as usize].wrapping_add(value);
+        self.pc += 2;
     }
 
     pub fn next_cycle(&mut self) {
@@ -80,12 +129,10 @@ impl Emulator {
             0x0000 => {
                 match opcode & 0x00FF {
                     0xE0 => {
-                        self.clear_screen();
-                        self.pc += 2;
+                        self.handle_cls();
                     },
                     0xEE => {
-                        self.pc = self.pop();
-                        self.pc += 2;
+                        self.handle_ret();
                     },
                     _ => {
                         unreachable!();
@@ -93,58 +140,37 @@ impl Emulator {
                 }
             },
             0x1000 => {
-                let value = opcode & 0x0FFF;
-                self.jump(value);
+                let address = opcode & 0x0FFF;
+                self.handle_jmp(address);
             },
             0x2000 => {
-                let value = opcode & 0x0FFF;
-
-                self.push(self.pc);
-                self.jump(value);
+                let address = opcode & 0x0FFF;
+                self.handle_call(address);
             },
             0x3000 => {
-                let register_index = ((opcode & 0x0F00) >> 8) as u8;
+                let register = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
-
-                if self.vx[register_index as usize] == value {
-                    self.pc += 4;
-                } else {
-                    self.pc += 2;
-                }
+                self.handle_se_vx_byte(register, value);
             },
             0x4000 => {
-                let register_index = ((opcode & 0x0F00) >> 8) as u8;
+                let register = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
-
-                if self.vx[register_index as usize] != value {
-                    self.pc += 4;
-                } else {
-                    self.pc += 2;
-                }
+                self.handle_sne_vx_byte(register, value);
             },
             0x5000 => {
-                let first_register_index = ((opcode & 0x00F0) >> 4) as u8;
-                let second_register_index = ((opcode & 0x0F00) >> 8) as u8;
-
-                if self.vx[first_register_index as usize] == self.vx[second_register_index as usize] {
-                    self.pc += 4;
-                } else {
-                    self.pc += 2;
-                }
+                let first_register = ((opcode & 0x00F0) >> 4) as u8;
+                let second_register = ((opcode & 0x0F00) >> 8) as u8;
+                self.handle_se_vx_vy(first_register, second_register);
             },
             0x6000 => {
-                let register_index = ((opcode & 0x0F00) >> 8) as u8;
+                let register = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
-
-                self.vx[register_index as usize] = value;
-                self.pc += 2;
+                self.handle_ld_vx_byte(register, value);
             },
             0x7000 => {
-                let register_index = ((opcode & 0x0F00) >> 8) as u8;
+                let register = ((opcode & 0x0F00) >> 8) as u8;
                 let value = (opcode & 0x00FF) as u8;
-
-                self.vx[register_index as usize] = self.vx[register_index as usize].wrapping_add(value);
-                self.pc += 2;
+                self.handle_add_vx_byte(register, value);
             },
             0x8000 => {
                 match opcode & 0x000F {
@@ -458,6 +484,10 @@ impl Emulator {
         let opcode: u16 = ((nibble1 as u16) << 8) | (nibble2 as u16);
 
         opcode
+    }
+
+    pub fn video_memory(&self) -> [[bool; 32]; 64] {
+        self.video_memory
     }
 
     #[doc = "Jump to a specific place in memory"]
