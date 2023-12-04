@@ -436,7 +436,7 @@ impl Emulator {
 
     fn scancode_to_value(&self, scancode: sdl2::keyboard::Scancode) -> Result<u8, ()> {
         if scancode as u8 >= sdl2::keyboard::Scancode::A as u8 && scancode as u8 <= sdl2::keyboard::Scancode::F as u8 {
-            return Ok((scancode as u8) + 6)
+            return Ok((scancode as u8) + 6);
         }
 
         if scancode as u8 == sdl2::keyboard::Scancode::Num0 as u8 {
@@ -447,7 +447,7 @@ impl Emulator {
             return Ok((scancode as u8) - 29);
         }
 
-        return Err(())
+        return Err(());
     }
 
     pub fn set_scancodes(&mut self, scancodes: Vec<Scancode>) {
