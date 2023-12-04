@@ -1,7 +1,5 @@
-use num_derive::FromPrimitive;
-
 #[repr(u16)]
-#[derive(Debug, FromPrimitive)]
+#[derive(Debug)]
 pub enum Opcode {
     ZeroOpcode = 0x0000,
     JpAddr = 0x1000,
@@ -22,14 +20,14 @@ pub enum Opcode {
 }
 
 #[repr(u16)]
-#[derive(Debug, FromPrimitive)]
+#[derive(Debug)]
 pub enum ZeroOpcode {
     CLS = 0xE0,
     RET = 0xEE
 }
 
 #[repr(u16)]
-#[derive(Debug, FromPrimitive)]
+#[derive(Debug)]
 pub enum EightOpcode {
     LdVxVy = 0x0,
     OrVxVy = 0x1,
@@ -43,14 +41,14 @@ pub enum EightOpcode {
 }
 
 #[repr(u16)]
-#[derive(Debug, FromPrimitive)]
+#[derive(Debug)]
 pub enum FourteenOpcode {
     SkpVx = 0x9E,
     SkpnVx = 0xA1
 }
 
 #[repr(u16)]
-#[derive(Debug, FromPrimitive)]
+#[derive(Debug)]
 pub enum FifteenOpcode {
     LdVxDt = 0x07,
     LdVxK = 0x0A,
