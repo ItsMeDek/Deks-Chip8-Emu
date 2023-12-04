@@ -4,7 +4,6 @@ use clap::Parser;
 use emulator::Emulator;
 use sdl2::{render::Canvas, video::Window, EventPump};
 
-mod opcode;
 mod emulator;
 
 #[derive(Debug, clap::Parser)]
