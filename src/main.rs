@@ -2,6 +2,7 @@ use std::path::Path;
 
 use clap::Parser;
 use emulator::Emulator;
+use frame_calculator::FrameCalculator;
 use sdl2::{render::Canvas, video::Window, EventPump};
 
 mod opcode;
@@ -17,6 +18,10 @@ pub struct AppConfiguration {
     #[doc = "Enables the hardware renderer"]
     #[arg(long, default_value_t = false)]
     pub hardware_canvas: bool,
+
+    #[doc = "If enable, outputs the FPS to stdout"]
+    #[arg(long, default_value_t = false)]
+    pub frame_calculator: bool,
 
     #[doc = "Specify the width of the window"]
     #[arg(long, default_value_t = 800)]
@@ -61,6 +66,8 @@ fn main() {
 
     let mut emulator = Emulator::new(std::fs::read(Path::new::<String>(&configuration.rom)).expect("Invalid rom path!"));
 
+    let mut frame_calculator = FrameCalculator::new();
+
     'run_loop: loop {
         handle_input(&event_pump, &mut emulator);
 
@@ -68,6 +75,11 @@ fn main() {
             break 'run_loop;
         }
         render(&mut window_canvas, &emulator);
+
+        if configuration.frame_calculator {
+            frame_calculator.tick();
+            println!("{}", frame_calculator.fps());
+        }
     }
 }
 
