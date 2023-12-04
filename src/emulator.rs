@@ -269,7 +269,7 @@ impl Emulator {
             Some(Opcode::LdIAddr) => {
                 let value = opcode & 0x0FFF;
 
-                self.set_i(value);
+                self.i = value;
                 self.pc += 2;
             },
             Some(Opcode::DrwVxVy) => {
@@ -484,11 +484,6 @@ impl Emulator {
     #[doc = "Override the entire vram with 0's"]
     fn clear_screen(&mut self) {
         self.video_memory.fill([false; 32]);
-    }
-
-    #[doc = "Set the I register to the specified value"]
-    fn set_i(&mut self, value: u16) {
-        self.i = value;
     }
 
     #[doc = "Read the specified number of bytes from memory at an offset"]
