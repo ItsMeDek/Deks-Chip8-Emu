@@ -6,6 +6,7 @@ use sdl2::{render::Canvas, video::Window, EventPump};
 
 mod opcode;
 mod emulator;
+mod frame_calculator;
 
 #[derive(Debug, clap::Parser)]
 pub struct AppConfiguration {
