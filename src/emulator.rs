@@ -435,57 +435,19 @@ impl Emulator {
     }
 
     fn scancode_to_value(&self, scancode: sdl2::keyboard::Scancode) -> Result<u8, ()> {
-        match scancode {
-            sdl2::keyboard::Scancode::Num0 => {
-                return Ok(0x0);
-            },
-            sdl2::keyboard::Scancode::Num1 => {
-                return Ok(0x1);
-            },
-            sdl2::keyboard::Scancode::Num2 => {
-                return Ok(0x2);
-            },
-            sdl2::keyboard::Scancode::Num3 => {
-                return Ok(0x3);
-            },
-            sdl2::keyboard::Scancode::Num4 => {
-                return Ok(0x4);
-            },
-            sdl2::keyboard::Scancode::Num5 => {
-                return Ok(0x5);
-            },
-            sdl2::keyboard::Scancode::Num6 => {
-                return Ok(0x6);
-            },
-            sdl2::keyboard::Scancode::Num7 => {
-                return Ok(0x7);
-            },
-            sdl2::keyboard::Scancode::Num8 => {
-                return Ok(0x8);
-            },
-            sdl2::keyboard::Scancode::Num9 => {
-                return Ok(0x9);
-            },
-            sdl2::keyboard::Scancode::A => {
-                return Ok(0xA);
-            },
-            sdl2::keyboard::Scancode::B => {
-                return Ok(0xB);
-            },
-            sdl2::keyboard::Scancode::C => {
-                return Ok(0xC);
-            },
-            sdl2::keyboard::Scancode::D => {
-                return Ok(0xD);
-            },
-            sdl2::keyboard::Scancode::E => {
-                return Ok(0xE);
-            },
-            sdl2::keyboard::Scancode::F => {
-                return Ok(0xF);
-            },
-            _ => { return Err(()) }
-        };
+        if scancode as u8 >= sdl2::keyboard::Scancode::A as u8 && scancode as u8 <= sdl2::keyboard::Scancode::F as u8 {
+            return Ok((scancode as u8) + 6)
+        }
+
+        if scancode as u8 == sdl2::keyboard::Scancode::Num0 as u8 {
+            return Ok(0x0);
+        }
+
+        if scancode as u8 >= sdl2::keyboard::Scancode::Num1 as u8 && scancode as u8 <= sdl2::keyboard::Scancode::Num9 as u8 {
+            return Ok((scancode as u8) - 29);
+        }
+
+        return Err(())
     }
 
     pub fn set_scancodes(&mut self, scancodes: Vec<Scancode>) {
