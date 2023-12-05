@@ -116,6 +116,89 @@ impl Emulator {
         self.pc += 2;
     }
 
+    fn handle_ld_vx_vy(&mut self, first_register: u8, second_register: u8) {
+        self.vx[first_register as usize] = self.vx[second_register as usize];
+        self.pc += 2;
+    }
+
+    fn handle_or_vx_vy(&mut self, first_register: u8, second_register: u8) {
+        self.vx[first_register as usize] |= self.vx[second_register as usize];
+        self.pc += 2;
+    }
+
+    fn handle_and_vx_vy(&mut self, first_register: u8, second_register: u8) {
+        self.vx[first_register as usize] &= self.vx[second_register as usize];
+        self.pc += 2;
+    }
+
+    fn handle_xor_vx_vy(&mut self, first_register: u8, second_register: u8) {
+        self.vx[first_register as usize] ^= self.vx[second_register as usize];
+        self.pc += 2;
+    }
+
+    fn handle_add_vx_vy(&mut self, first_register: u8, second_register: u8) {
+        let vx_value_before = self.vx[first_register as usize];
+
+        self.vx[first_register as usize] = self.vx[first_register as usize].wrapping_add(self.vx[second_register as usize]);
+        // Check for VX overflow
+        if self.vx[first_register as usize] < vx_value_before {
+            self.vx[15] = 1;
+        } else {
+            self.vx[15] = 0;
+        }
+        self.pc += 2;
+    }
+
+    fn handle_sub_vx_vy(&mut self, first_register: u8, second_register: u8) {
+        let vx_value_before = self.vx[first_register as usize];
+
+        self.vx[first_register as usize] = self.vx[first_register as usize].wrapping_sub(self.vx[second_register as usize]);
+        // Check for VX underflow
+        if self.vx[first_register as usize] < vx_value_before {
+            self.vx[15] = 1;
+        } else {
+            self.vx[15] = 0;
+        }
+        self.pc += 2;
+    }
+
+    fn handle_shr_vx(&mut self, register: u8) {
+        let vx_value_before = self.vx[register as usize];
+
+        self.vx[register as usize] = self.vx[register as usize].wrapping_shr(1);
+
+        if ((vx_value_before << 7) >> 7) == 1 {
+            self.vx[15] = 1;
+        } else {
+            self.vx[15] = 0;
+        }
+        self.pc += 2;
+    }
+
+    fn handle_subn_vx_vy(&mut self, first_register: u8, second_register: u8) {
+        self.vx[first_register as usize] = self.vx[second_register as usize].wrapping_sub(self.vx[first_register as usize]);
+
+        if self.vx[second_register as usize] > self.vx[first_register as usize] {
+            self.vx[15] = 1;
+        } else {
+            self.vx[15] = 0;
+        }
+        self.pc += 2;
+    }
+
+    fn handle_shl_vx(&mut self, register: u8) {
+        let vx_value_before = self.vx[register as usize];
+
+        self.vx[register as usize] = self.vx[register as usize].wrapping_shl(1);
+
+        if (vx_value_before >> 7) == 1 {
+            self.vx[15] = 1;
+        } else {
+            self.vx[15] = 0;
+        }
+        self.pc += 2;
+    }
+
     pub fn next_cycle(&mut self) {
         // Decrement the timers
         self.timers.iter_mut().for_each(|timer| {
@@ -175,105 +258,49 @@ impl Emulator {
             0x8000 => {
                 match opcode & 0x000F {
                     0x0 => {
-                        let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
-                        let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
-
-                        self.vx[first_register_index as usize] = self.vx[second_register_index as usize];
-                        self.pc += 2;
+                        let first_register = ((opcode & 0x0F00) >> 8) as u8;
+                        let second_register = ((opcode & 0x00F0) >> 4) as u8;
+                        self.handle_ld_vx_vy(first_register, second_register);
                     },
                     0x1 => {
-                        let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
-                        let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
-
-                        self.vx[first_register_index as usize] |= self.vx[second_register_index as usize];
-                        self.pc += 2;
+                        let first_register = ((opcode & 0x0F00) >> 8) as u8;
+                        let second_register = ((opcode & 0x00F0) >> 4) as u8;
+                        self.handle_or_vx_vy(first_register, second_register);
                     },
                     0x2 => {
-                        let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
-                        let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
-
-                        self.vx[first_register_index as usize] &= self.vx[second_register_index as usize];
-                        self.pc += 2;
+                        let first_register = ((opcode & 0x0F00) >> 8) as u8;
+                        let second_register = ((opcode & 0x00F0) >> 4) as u8;
+                        self.handle_and_vx_vy(first_register, second_register);
                     },
                     0x3 => {
-                        let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
-                        let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
-
-                        self.vx[first_register_index as usize] ^= self.vx[second_register_index as usize];
-                        self.pc += 2;
+                        let first_register = ((opcode & 0x0F00) >> 8) as u8;
+                        let second_register = ((opcode & 0x00F0) >> 4) as u8;
+                        self.handle_xor_vx_vy(first_register, second_register);
                     },
                     0x4 => {
-                        let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
-                        let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
-
-                        let vx_value_before = self.vx[first_register_index as usize];
-
-                        self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_add(self.vx[second_register_index as usize]);
-                        // Check for VX overflow
-                        if self.vx[first_register_index as usize] < vx_value_before {
-                            self.vx[15] = 1;
-                        } else {
-                            self.vx[15] = 0;
-                        }
-                        self.pc += 2;
+                        let first_register = ((opcode & 0x0F00) >> 8) as u8;
+                        let second_register = ((opcode & 0x00F0) >> 4) as u8;
+                        self.handle_add_vx_vy(first_register, second_register);
                     },
                     0x5 => {
-                        let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
-                        let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
-
-                        let vx_value_before = self.vx[first_register_index as usize];
-
-                        self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_sub(self.vx[second_register_index as usize]);
-                        // Check for VX underflow
-                        if self.vx[first_register_index as usize] < vx_value_before {
-                            self.vx[15] = 1;
-                        } else {
-                            self.vx[15] = 0;
-                        }
-                        self.pc += 2;
+                        let first_register = ((opcode & 0x0F00) >> 8) as u8;
+                        let second_register = ((opcode & 0x00F0) >> 4) as u8;
+                        self.handle_sub_vx_vy(first_register, second_register);
                     },
                     0x6 => {
-                        let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
-                        //let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
-
-                        let vx_value_before = self.vx[first_register_index as usize];
-
-                        self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_shr(1);
-
-                        if ((vx_value_before << 7) >> 7) == 1 {
-                            self.vx[15] = 1;
-                        } else {
-                            self.vx[15] = 0;
-                        }
-                        self.pc += 2;
+                        let register = ((opcode & 0x0F00) >> 8) as u8;
+                        //let second_register = ((opcode & 0x00F0) >> 4) as u8;
+                        self.handle_shr_vx(register);
                     },
                     0x7 => {
-                        let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
-                        let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
-
-                        self.vx[first_register_index as usize] = self.vx[second_register_index as usize].wrapping_sub(self.vx[first_register_index as usize]);
-
-                        if self.vx[second_register_index as usize] > self.vx[first_register_index as usize] {
-                            self.vx[15] = 1;
-                        } else {
-                            self.vx[15] = 0;
-                        }
-                        self.pc += 2;
+                        let first_register = ((opcode & 0x0F00) >> 8) as u8;
+                        let second_register = ((opcode & 0x00F0) >> 4) as u8;
+                        self.handle_subn_vx_vy(first_register, second_register);
                     },
                     0xE => {
-                        let first_register_index = ((opcode & 0x0F00) >> 8) as u8;
+                        let register = ((opcode & 0x0F00) >> 8) as u8;
                         //let second_register_index = ((opcode & 0x00F0) >> 4) as u8;
-
-                        let vx_value_before = self.vx[first_register_index as usize];
-
-                        self.vx[first_register_index as usize] = self.vx[first_register_index as usize].wrapping_shl(1);
-
-                        if (vx_value_before >> 7) == 1 {
-                            self.vx[15] = 1;
-                        } else {
-                            self.vx[15] = 0;
-                        }
-                        self.pc += 2;
+                        self.handle_shl_vx(register);
                     },
                     _ => {
                         unreachable!();
